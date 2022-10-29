@@ -1,0 +1,33 @@
+TP_AVANCE__1:
+EXO1:
+select distinct DATE_DE_LA_SEANCE  
+from ACTEUR, ROLE, FILM, SEANCE
+where ACTEUR.NUMERO_ACTEUR=ROLE.NUMERO_ACTEUR
+and ROLE.NUMERO_FILM=FILM.NUMERO_FILM
+and SEANCE.NUMERO_FILM=FILM.NUMERO_FILM
+and ACTEUR.NUMERO_ACTEUR=1;
+=========================================
+select NOM_DU_ROLE
+from ROLE R, ACTEUR A
+where A.NUMERO_ACTEUR=R.NUMERO_ACTEUR
+and A.NUMERO_ACTEUR=4
+order by NOM_DU_ROLE asc;
+=========================================
+select DATE_DE_LA_SEANCE,HORAIRE 
+from ACTEUR, ROLE, SEANCE, FILM 
+where ACTEUR.NUMERO_ACTEUR=ROLE.NUMERO_ACTEUR
+and ROLE.NUMERO_FILM=FILM.NUMERO_FILM
+and SEANCE.NUMERO_FILM=FILM.NUMERO_FILM
+and FILM.NUMERO_FILM=7
+order by DATE_DE_LA_SEANCE desc, HORAIRE asc;
+=========================================
+select count(*) 
+from ACTEUR;
+=========================================
+select TITRE_FILM 
+from(
+select TITRE_FILM, count(NUMERO_SEANCE) 
+from FILM, SEANCE
+where FILM.NUMERO_FILM=SEANCE.NUMERO_FILM
+group by TITRE_FILM
+having count(NUMERO_SEANCE) = 2);
