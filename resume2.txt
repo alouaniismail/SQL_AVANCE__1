@@ -1,0 +1,190 @@
+JOINTURES:
+-------------------------------------------------------
+1/
+select * from
+ACTEUR inner join ROLE
+using(NUMERO_ACTEUR);
+2/
+select * from
+ACTEUR left outer join ROLE
+using(NUMERO_ACTEUR);
+3/
+select NOM_REALISATEUR, PRENOM_REALISATEUR
+from REALISATEUR natural join FILM
+natural join ROLE
+natural join ACTEUR
+where NOM_ACTEUR='DUBOIS';
+4/
+select NOM_ACTEUR, PRENOM_ACTEUR, count(FILM.NUMERO_FILM)
+from ACTEUR left outer join ROLE
+on ACTEUR.NUMERO_ACTEUR=ROLE.NUMERO_ACTEUR
+left outer join FILM
+on ROLE.NUMERO_FILM=FILM.NUMERO_FILM
+group by NOM_ACTEUR, PRENOM_ACTEUR
+order by count(FILM.NUMERO_FILM) desc;
+###
+ATTENTION: il peut y avoir des roles null oui mais pas tout a fait attribues aux acteurs
+=>on fait une triple-jointure avec FILM comme cela le nombre de films est clair.
+
+VUES:
+-------------------------------------------------------------
+EXO2:
+>(nommer les lignes apres ...)
+
+create or replace view ACTEUR_NBR_SEANCE (NOM, PRENOM, SEANCES) as
+select NOM_ACTEUR, PRENOM_ACTEUR, count(NUMERO_SEANCE)
+from ACTEUR natural join ROLE
+natural join FILM
+natural join SEANCE
+group by NOM_ACTEUR, PRENOM_ACTEUR;
+
+verification: select * from ACTEUR_NBR_SEANCE;
+(replace important)///
+
+Rq:
+with read-only 
+with check-option [constraint nom_constraint] (direct)..(triggers apres ...)
+
+
+
+DECLENCHEURS:
+--------------------------------------------------------------------------------
+EXEMPLE tiré de PL/SQL(oblige des now!??)
+
+create or raplace trigger a
+before insert or update on TABLE
+for each row
+when(new.no_line>0)
+declare
+evol_exemple number;
+begin
+evol_exemple := new.exemple - : old.exemple
+DBMS_OUTPUT.PUT_LINE('evolution: ' || evol_exemple);
+end;
+/
+(of numero_colonne__attribut____NOM on TABLE(contenant ce dernier)).
+<=>block pl/sql.(rq: instead of : a la place de faire ceci dicté par a)
+
+
+2ieme exemple:
+create trigger MAJ_LOG
+after update on PAYS
+for each row
+when (new.SURFACE <> old.SURFACE)
+begin
+  insert into PAYS_LOG (NOM, LIBELLE)
+  values (:new.NOM, 'surface_changée');
+end;
+/
+
+EXO1-3:(jointures/vues/declencheurs)
+>>>>
+C'est deja fait.
+Nous on doit remplacer la valeur de categorie pour place..
+Syntaxe a retenir(pas vue avant):
+update TABLE
+set ATTRIBUT=..;
+
+================================================
+create or replace trigger RESA_SPECIALE
+after insert on RESERVATION 
+###(on va itérer prochainement sur les lignes donc pas de of PLACE_...)
+for each row 
+when(new.NUMERO_PLACE=1)
+###new.NUMERO_PLACE cad. la nouvelle table avec la valeur d'attribut 1 en la ligne en cours.
+begin
+###syntaxe de modification: update set ...='...';
+update PLACE
+set CATEGORIE_DE_LA_PLACE='categorie speciale'
+where NUMERO_PLACE=1
+end;
+/
+=================================================
+REPRISE:
+drop trigger RESA_SPECIALE
+=====================================
+create or replace trigger RESA_SPECIALE
+after insert on RESERVATION
+for each row
+when (new.NUMERO_PLACE = 1)
+begin
+  update PLACE 
+  set CATEGORIE_DE_LA_PLACE = 'S'
+  where NUMERO_PLACE = 1;
+end;
+/
+======================================
+show errors triggers nom_declencheur
+&& indentation!!!
+
+=>on execute normalement le script
+(Rq: delete * nn delete TABLE where [condition]())
+=>on insere une valeur dans reservation dont le numero de la place est = à1
+=>on fait une requete sur place * where NUMERO_PLACE=1
+RSLT: categorie_de_la_place==='S'.
+VOILA.
+(le trigger marche a 100% (sans erreurs de compilations))
+
+---------------------------------------------------------------------------------------
+OPTIMISATION:
+set autotrace on explain stat
+pour suivre l'execution.
+ASTUCE:
+optimiser les requêtes ~<=>~ faire des sélections au plus tôt cela parait a 100% logique vue la nature des operations possibleS.
+
+----------------------------------------------------------------------------------------------
+TRANSACTIONS:(voir chapitre transactions et recurrences)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
