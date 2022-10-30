@@ -2,6 +2,8 @@ import java.sql.*;
 import oracle.jdbc.pool.OracleDataSource;
 import java.util.*;
 import java.lang.*;
+import java.io.*;
+//les deux avant-derneirs de plus.
 
 public class formatDeDate{
     public static void main(String[] args)
@@ -11,28 +13,27 @@ public class formatDeDate{
 	ods.setPassword("ialouani");
 	ods.setURL("jdbc:oracle:thin:@localhost:1521/oracle");
 	Connection conn=null;
-	Statement stmt=null;
+	PreparedStatement stmt=null;//au lieu de Statement stmt=null.
 	try{
-	    conn=ods.getConnection();
-	    stmt=conn.createStatement();
 	    Scanner scanner=new Scanner(System.in);
-	    System.out.println("Entrez le format date annee/mois/jour ici: ");
-	    System.out.println("L'annee:");
-	    int year=Integer.parseInt(scanner.nextLine());
-	    System.out.println("Le mois:");
-	    int month=Integer.parseInt(scanner.nextLine());
-	    System.out.println("Le jour:");
-	    int day=Integer.parseInt(scanner.nextLine());
-	    Scanner sc=new Scanner(System.in);
-	    System.out.println("Entrez le nom svp: ");
-	    String nom=sc.nextLine();
-	    System.out.println("Entrez le prenom svp: ");
-	    String prenom=sc.nextLine();
-	    String dateDeNaissance=year+"/"+month+"/"+day;
-            String sql="insert into IDENTITEE " +
-		"VALUES ('alouani',  'ismail',  '07/10/1999')" ;
-            stmt.executeUpdate(sql);
-	}
+	    System.out.println("Enter your first name: ");
+	    String firstName=scanner.nextLine();
+	    System.out.println("Enter your last name: ");
+	    String lastName=scanner.nextLine();
+	    System.out.println("Enter your birthday's date: ");
+	    String dN=scanner.nextLine();
+	    conn=ods.getConnection();//preparation de la connexion..
+	    //base en cours connue..(..)  .
+	    stmt=conn.prepareStatement("insert into IDENTITEE "
+				       +" (NOM, PRENOM, DATE_DE_NAISSANCE)" + " values (?, ?, ?)");
+	    
+	    stmt.setString(1,firstName);
+	    stmt.setString(2,lastName);
+	    stmt.setString(3,dN);
+	    //avec des types VARCHAR(20).
+	    stmt.executeUpdate();//pour l'execution de la requete avec les
+	    //bonnes valeurs maintenues à cette étape.
+}
 	finally{
 	    if(stmt!=null){
 		stmt.close();
