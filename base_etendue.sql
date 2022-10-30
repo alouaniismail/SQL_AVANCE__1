@@ -52,6 +52,10 @@ drop index ACTEUR_PK;
 
 drop table ACTEUR cascade constraints;
 
+drop table IDENTITEE cascade constraints;
+
+drop table TEST cascade constraints;
+
 -- ============================================================
 --   Table : ACTEUR                                            
 -- ============================================================
@@ -63,6 +67,23 @@ create table ACTEUR
     NATION_ACTEUR                   CHAR(20)                       ,
     DATE_DE_NAISSANCE               DATE                           ,
     constraint pk_acteur primary key (NUMERO_ACTEUR)
+);
+
+create table IDENTITEE
+(
+NOM                    CHAR(20),
+PRENOM                 CHAR(20),
+DATE_DE_NAISSANCE      CHAR(20)
+);
+
+create table TEST
+(
+ID	NUMBER(10),
+NOM	CHAR(10)
+);
+
+alter table TEST add(
+      constraint pk_test primary key (ID)
 );
 
 -- ============================================================
@@ -229,4 +250,18 @@ alter table TARIF
 alter table TARIF
     add constraint fk2_tarif foreign key (CATEGORIE_DE_LA_SEANCE)
        references CATEGORIE_SEANCE (CATEGORIE_DE_LA_SEANCE);
+
+
+create sequence SEQ_NAME;
+
+create or replace trigger trigger_test
+       before insert on TEST
+       for each row 
+BEGIN
+	   if :new.ID is null then :new.ID:=SEQ_NAME.NEXTVAL;
+	   END IF;
+END;
+/
+
+
 

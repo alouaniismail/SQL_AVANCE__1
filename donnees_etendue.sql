@@ -12,6 +12,7 @@ delete from ROLE ;
 delete from ACTEUR ;
 delete from FILM ;
 delete from REALISATEUR ;
+delete from IDENTITEE;
 
 commit ;
 

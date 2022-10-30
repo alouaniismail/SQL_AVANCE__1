@@ -135,6 +135,185 @@ optimiser les requêtes ~<=>~ faire des sélections au plus tôt cela parait a 1
 ----------------------------------------------------------------------------------------------
 TRANSACTIONS:(voir chapitre transactions et recurrences)
 
+Resume Important:
+Une transaction est une séquence de requêtes sql executées en une seule fois.
+Respect des règles acides grâce au verouillage à deux phases.
+(atomicite,coherence,integrite,durabilite)
+Création avant le début du compteur ce qu'on appelle le gestionnaire de la transaction : une estampille.
+
+1/part1:
+summary:
+>>L'insertion est effectuée dans la base de données mais peut être défaite définitivement par un rollback ou bien devient effective de manière permanente par un commit : propriété de durabilité des transactions. 
+
+2/part2:
+insert into RESERVATION values (1 , 1 , 'un spectateur');
+select * from RESERVATION => existe l'ajout. 
+commit; (SQL>)
+afficher les reservations: meme chose.
+de meme sans commit;""
+rollback puis affichage => disparait la ligne spectateur2.(2,2) [].
+<=>propriétée de durabilitée des transactions. 
+
+2 terminaux && mise a jour suivant les deux .sql donnees.
+APRES deduction:
+**La réservation n'apparaît que dans la seconde session (et pas dans la première) ; propriété d'isolation des transactions.**
+on insere la meme donnee dans la 1ere session;rslt:
+La première session est bloquée sur cette insertion ce qui suppose un mécanisme de verrouillage des enregistrements (par exemple : l'utilisation de mutex). 
+ROLLBACK au lieu d'un COMMIT dans la seconde session conduit au rslt suivant:
+La seconde session défait l'insertion et termine sa transaction, et ainsi débloque la première session qui peut alors effectuer son insertion. 
+insertion sur le terminal premiere session:
+La réservation n'apparaît que dans la première session (et non dans la seconde). 
+^^^^^^^^^^^^^^^^^^^^^^^^^
+___________________________|||||||||||||||||||||||||||||||||||||||||||||||||
+FAIRE un commit apres insertion dans la 1ere session(suivi de la derniere action):
+>La seconde session valide définitivement la réservation.
+>La réservation apparaît dans les deux sessions.
+>Conclusion::
+Les sessions ne voient que leurs propres mises à jour tant que les autres transactions ne sont pas achevées (validées ou invalidées). De plus, en cas d'accès concurrents, le dernier arrivé est mis en attente. 
+
+3/part3:
+a-modifions une reservation R1 dans la 1ere session.
+b-modifions une reservation R2 dans la 2eme session.
+c-modifions la reservation R1 dans la 2eme session=>ça bloque(mécanisme de vérouillage des MODIFICATIONS)
+d-de meme pour modifier la R2 dans la 1ere session.
+e&f-ROLLBACK remet toutes les choses comme avant(de-verouillage).
+g-tant que pas de rollback ou commit, pas de concurrence au niveau de la meme donnee.(commit, abondan par ROLLBACK.)
+h-C'est fait. 
+
+-------------------------------------------------------------------------------------
+BONUS: procédures stockées
+Définition plus large:
+Une procédure stockée, aussi appelée stored procedure en anglais, est un concept utilisé en administration de base de données afin d’exécuter un ensemble d’instructions SQL. Une telle procédure est stockée au sein du Système de Gestion de Base de Donneés (SGBD) et peut être appelée à tout moment par son nom afin d’exécuter celle-ci.
+->choisir une nouvelle reservation(la meme plus haut)
+->insertion
+->affichage;
+sortie:
+
+select * from RESERVATION
+  2  where NUMERO_PLACE=1 and NUMERO_SEANCE=1;
+
+NUMERO_SEANCE NUMERO_PLACE NOM_SPECTATEUR
+------------- ------------ --------------------
+	    1		 1 un spectateur
+3)
+au lieu d'inserer, on va modifier le nom du spectateur de la derniere reservation et puis l'afficher.
+execute INSER_1_RESA_OBLIG(20,256) affiche le message d'erreur relatif a la suppression de cette ligne.
+delete from RESERVATION where NOM_SPECTATEUR='deux' ne marche pas (evoquation du trigger)
+[au lieu de when effectue laprocedure stockeeavec les bons arguments].
+affichage: toujours presente.
+execute .. m^ instru. => ne change rien en tout.
+(ne réinitialise pas(nom_spectateur qui a ete modifie))
+rollback: remet les choses comme avant mais un delete avec num_place & num_seance presents dans les couples de la condition when if on (procédure) déclenche l'erreur (le trigger qui appelle cet affichage).
+^^^^^^^^^^^^^
+________________________________|||||||||||||||||||||||||||||||||||||||||
+c-(dans le 3)):::
+exit logout wget crtl-v rm .1 rm #($(tab))./
+puis remise et execution.
+voila comment s'y prendre.
+Rq:
+ça change en rien de si speciale la conduite en cas d'insertion totale et pas de modification partielle de donnees.
+ un-delete from avec (1,64) apres affichage (selection,projection ) ne marche pas , la donnee est tjrs presente apres(persistance).
+ deux-rollback execution('s) ne fait rien affiche: rollback completed..
+ trois-execute INSER_1_SERA_OBLIG(1,64) affiche ce que veut reclamer la procedure ; tout cela est normale des que le fichier est tournee dans le SGBD.
+ 
+ 
+--------------------------------------------------------------------------------------
+BONUS: Formats de date
+Rappel:
+jointures
+vues
+declencheurs
+optimisation(selection en premier)
+transactions
+BONUS1: procedures stockees.
+BONUS2: formats de date.
+>Nous y voilà:
+comme d'habitude mais la:
+String sql="insert into IDENTITEE"+
+	"VALUES ('..', '..', '..')";
+stmt.executeUpdate(sql);
+=>L'insertion s'effectue sans problème.
+(Mais si les 2 .sql s'effectue apres dans une session sql tout s'annule ; on revient au point de depart (*)  ).
+Rq:
+Creation de la table iDENTITEE:
+drop table IDENTITEE cascade constraints;
+create table IDENTITEE(
+nom	CHAR(20),
+prenom	CHAR(20),
+date_naissance CHAR(20)
+);
+dans base_etendue.sql.
+(pas d'ajout sur donnees_etendue.sql(*)).
+--------------------------------------------------------------
+BONUS2:
+	Auto-increment avec Oracle::
+>
+Impossible de declarer comme dans Mysql AUTO_INCREMENT apres le type de l'attribut parmi les attributs d'une entitée dans oracle!
+=>Passage par des séquences et des triggers:
+drop table TEST cascade constraints;
+create table TEST(
+ID	number(10),
+NOM	char(10)
+);
+alter table TEST add(
+	constraint pk_test primary key (ID)
+);
+PUIS creation de la sequence:
+create sequence SEQ_NAME;
+ET PUIS creation du trigger:
+create or replace trigger trigger_test
+	before insert on TEST
+	for each row
+BEGIN
+	if :new.ID is null then :new.ID:=SEQ_NAME.NEXTVAL;
+	END IF;
+END;
+/
+puis les 2 sql s'executent dans une session sqlplus d'Oracle.
+Verification:
+insert into TEST (NOM) values ('Test');
+1 row added..
+select * from TEST
+ID correspond a 1 (une seule ligne)
+TOUT EST OK.//
+------------------------------------------------------------------------------
+BONUS3(le dernier): Prompt
+But: ouvrir une boite de dialogue et demander a l'utilisateur de rentrer un numero de film puis afficher les dates et seances de diffusion de ce film.
+>>>
+(le bonus 1 pourrait se faire plus operationnellement par des joker --jdbc--).
+Retour a nos prompts:
+Comment faire??
+=>*Resume d'abord des bonus*
+1/Un peu de jdbc pour decouvrir le executeUpdate(sql) avec sql la requete en String --format--(()).(~joker principe('s))
+2/Auto_increment SUIVANT le sgbd oracle/sqlplus.
+3/Prompt dialog box avec oracle puis affichage du resultat de la requete parametree(~joker)
+REVENONS:
+>
+>>>
+
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
