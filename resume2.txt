@@ -289,81 +289,30 @@ Comment faire??
 3/Prompt dialog box avec oracle puis affichage du resultat de la requete parametree(~joker)
 REVENONS:
 >
->>>
-
-
-
-
-
-
-
-
-
- 
- 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+>>>Création d'un script de mode accept prompt nomme: test_box_dialog::
+ACCEPT NUM_FILM PROMPT ' Entrez un numéro de film valide :  ';
+select DATE_DE_LA_SEANCE,NUMERO_SEANCE
+from SEANCE natural join FILM
+where NUMERO_FILM=&NUM_FILM;
+on rejoint sqlplus et les 2 .sql + execution via:
+@test_box_dialog
+on entre un numero de film 2 on compare ; c'est bon.
+sans le ACCEPT..(1ere ligne): tjrs meme resultat faut NUMERO_FILM###&NUM_FILM && :=VALEUR ENTIERE CHOISIE..(pour le film qu'on veut)
+Pour eviter cela(re-utilisation), on defait la valeur en la rendant predictible via:
+UNDEFINE NUM_FILM
+dans la ligne de commandes sql.
+et voila.
+Rq(importante): si on tape la meme requete avec .. COMME SUIT:
+select *
+from FILM
+where NUMERO_FILM=&NUM_FILM
+cela afficherai (script pris en compte quand meme!!) 
+Enter value for num_film: (naturellement car &var)
+Puis debut execution avec quelques infos:
+old 3: where NUMERO_FILM=&NUM_FILM
+new 3:(reference la ligne) where NUMERO_FILM=2
+Puis resultat.
+Comme ca,
+l'instruction dans >sql'''' de UNDEFINE NUM_FILM n'est pas necessaire ici.
+(MOINS que la moitie de cette reponse repond et est operationnelle avec ce qu'on voudrais faire au debut avec un script pl/sql normal ici:!!)
+FIN_TP_SQLAVANCE__1.
